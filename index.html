@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>30th Celebration 拆包模拟器 · 概率与经济学教学</title>
+<meta name="description" content="Pokémon TCG 30th Celebration 英文卡包拆包模拟器：真实卡表、社区统计爆率、市场价，用于概率与经济学教学。">
+<meta name="theme-color" content="#07080f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://assets.tcgdex.net">
+<link rel="preconnect" href="https://tcgplayer-cdn.tcgplayer.com">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="top">
+  <a class="brand" href="#open" data-nav="open">
+    <img src="https://assets.tcgdex.net/en/me/30th/logo.png" alt="30th Celebration" onerror="this.style.display='none'">
+    <span><b>拆包模拟器</b><small>Pack Opening Lab</small></span>
+  </a>
+  <nav class="tabs" role="tablist">
+    <button data-nav="open" class="on">开包</button>
+    <button data-nav="binder" id="tabBinder">Binder <em id="binderCount">0</em></button>
+    <button data-nav="stats">概率与经济</button>
+  </nav>
+  <div class="wallet">
+    <div class="w-item"><small>已开</small><b id="wPacks">0</b></div>
+    <div class="w-item"><small>花费</small><b id="wSpent">$0.00</b></div>
+    <div class="w-item"><small>净盈亏</small><b id="wNet">$0.00</b></div>
+    <button class="icon-btn" id="btnSound" title="音效开关" aria-label="音效开关"></button>
+  </div>
+</header>
+
+<main>
+  <!-- ================= OPEN ================= -->
+  <section class="view on" id="view-open">
+    <div class="stage" id="stage" data-phase="idle">
+      <div class="rays" aria-hidden="true"></div>
+
+      <div class="phase p-idle">
+        <div class="pack-float">
+          <div class="pack" id="pack">
+            <div class="pack-top"></div>
+            <div class="pack-body"></div>
+            <div class="pack-shine"></div>
+            <div class="cut" id="cut">
+              <div class="cut-done"></div>
+              <div class="scissors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg></div>
+            </div>
+          </div>
+          <div class="pack-shadow"></div>
+        </div>
+        <p class="hint" id="idleHint">按住剪刀沿虚线<b>向右拖动</b>剪开卡包 · 或按 <kbd>空格</kbd></p>
+        <div class="actions">
+          <button class="btn primary" id="btnCut">✂ 剪开卡包 <span class="price-tag" id="packPriceTag">$4.99</span></button>
+          <button class="btn ghost" id="btnQuick">快速连开 10 包</button>
+        </div>
+      </div>
+
+      <div class="phase p-reveal">
+        <div class="swipe-tag keep">收入 Binder</div>
+        <div class="swipe-tag skip">不收藏</div>
+        <div class="stack" id="stack"></div>
+        <div class="info" id="info"></div>
+        <div class="decide" id="decide">
+          <button class="btn ghost sm" id="btnSkip"><kbd>←</kbd> 不收藏</button>
+          <button class="btn primary sm" id="btnKeep">收入 Binder <kbd>→</kbd></button>
+        </div>
+        <div class="tray-wrap">
+          <div class="tray" id="tray"></div>
+          <div class="tray-total"><small>本包价值</small><b id="trayTotal">$0.00</b><button class="link" id="btnSkipAll">全部翻开 ›</button></div>
+        </div>
+      </div>
+
+      <div class="phase p-summary">
+        <div class="sum-head">
+          <div>
+            <small id="sumLabel">本包结果</small>
+            <h2 id="sumValue">$0.00</h2>
+          </div>
+          <div class="sum-vs" id="sumVs"></div>
+        </div>
+        <div class="sum-tools">
+          <span id="sumKeptText"></span>
+          <button class="link" data-sum="all">全部收藏</button>
+          <button class="link" data-sum="hits">只留稀有</button>
+          <button class="link" data-sum="none">全部不留</button>
+        </div>
+        <div class="sum-grid" id="sumGrid"></div>
+        <div class="actions">
+          <button class="btn primary" id="btnAgain">再开一包 <kbd>Enter</kbd></button>
+          <button class="btn ghost" id="btnAgain10">再连开 10 包</button>
+          <button class="btn ghost" data-nav="binder">查看 Binder</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BINDER ================= -->
+  <section class="view" id="view-binder">
+    <div class="wrap">
+      <div class="b-head">
+        <div class="ring" id="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring-fg" id="ringFg"/></svg><div><b id="ringPct">0%</b><small id="ringTxt">0 / 191</small></div></div>
+        <div class="b-kpis">
+          <h1>我的 Binder</h1>
+          <div class="kpis">
+            <div class="kpi"><small>收藏总价值</small><b id="bValue">$0.00</b></div>
+            <div class="kpi"><small>卡牌总数</small><b id="bTotal">0</b></div>
+            <div class="kpi"><small>最贵的一张</small><b id="bBest">—</b></div>
+          </div>
+          <div class="chips" id="chips"></div>
+        </div>
+      </div>
+      <div class="b-tools">
+        <div class="seg" id="segOwn">
+          <button data-v="all" class="on">全部</button><button data-v="own">已拥有</button><button data-v="miss">未拥有</button>
+        </div>
+        <input type="search" id="bSearch" placeholder="搜索卡名 / 编号…" autocomplete="off">
+        <select id="bSort" aria-label="排序">
+          <option value="num">按编号</option><option value="price">按价值</option><option value="count">按数量</option>
+        </select>
+      </div>
+      <div class="b-grid" id="bGrid"></div>
+      <p class="empty" id="bEmpty" hidden>这里还没有卡。去开一包吧！</p>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="view" id="view-stats">
+    <div class="wrap">
+      <h1>概率与经济学</h1>
+      <p class="lead">这一页把“开包”拆成可以计算的东西：每个稀有度的爆率、每包的期望价值（EV）、你的实际运气，以及为什么<b>平均值会骗人</b>。</p>
+
+      <div class="kpis big" id="sKpis"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>卡包结构与爆率</h2><p>每包 5 张闪卡：2 张 Common、1 张 Pikachu（30 选 1）、1 张 Rare Holo 位（约 21% 升级为 Double Rare）、1 张“变化位”（可能是 Illustration Rare 及以上，或 Classic Collection，否则为 Common）。</p></div>
+          <div class="settings">
+            <label>卡包价格<select id="setPrice"><option value="4.99">$4.99 · 零售价（2 包装 $9.99）</option><option value="9.28">$9.28 · 二级市场单包价</option></select></label>
+            <label>RGB Mew 假设爆率<select id="setRgb"><option value="1500">1 / 1,500 包</option><option value="3000">1 / 3,000 包</option><option value="6000">1 / 6,000 包</option></select></label>
+          </div>
+        </div>
+        <div class="table-scroll"><table class="tbl" id="tblOdds"></table></div>
+        <p class="note" id="evNote"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h2>你的运气 vs 理论期望</h2><p>样本越大，观察值越接近期望值（大数定律）。开得少的时候，偏差很大是正常的。</p></div></div>
+        <div class="table-scroll"><table class="tbl" id="tblLuck"></table></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>蒙特卡洛模拟：单包价值的分布</h2><p>一次模拟成千上万包，看看“一包值多少钱”的真实分布。注意平均值与中位数的差距。</p></div>
+          <div class="settings row">
+            <button class="btn ghost sm" data-sim="1000">模拟 1,000 包</button>
+            <button class="btn ghost sm" data-sim="10000">模拟 10,000 包</button>
+            <button class="btn ghost sm" data-sim="100000">模拟 100,000 包</button>
+          </div>
+        </div>
+        <div class="kpis" id="simKpis"></div>
+        <div class="hist" id="hist"></div>
+        <p class="note" id="simNote"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>追卡计算器：开包 vs 直接买单卡</h2><p>想要某一张卡，需要开多少包？这是几何分布：每包命中概率 p，期望需要 1/p 包。</p></div>
+          <div class="settings"><label>目标卡牌<select id="chaseSel"></select></label></div>
+        </div>
+        <div class="chase">
+          <img id="chaseImg" alt="">
+          <div class="chase-body">
+            <div class="kpis" id="chaseKpis"></div>
+            <div class="curve" id="curve"></div>
+            <p class="note" id="chaseNote"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>数据来源与说明</h2>
+        <ul class="src">
+          <li>卡表、卡图与价格：<a href="https://tcgdex.dev" target="_blank" rel="noopener">TCGdex API</a>（128 张主系列 + 30 张秘密稀有 + 3 张 RGB Mew，另加 30 张 Classic Collection）；部分卡图与卡包图来自 TCGplayer 商品图。价格为 2026-11-16 的 TCGplayer market price 快照（4 张缺价的卡用 Cardmarket 趋势价换算）。</li>
+          <li>爆率：<a href="https://www.tcgplayer.com/content/article/Pok%C3%A9mon-TCG-30th-Celebration-Pull-Rates/587b3657-481a-4ab8-827c-68cd3ab585b0/" target="_blank" rel="noopener">TCGplayer 3,000+ 包统计</a>（Double Rare 21.02%、Illustration Rare 19.72%、Classic Collection 10.15%、Special Illustration Rare 4.88%、Futuristic Rare 0.83%）。官方从未公布爆率，这些都是社区样本估计。</li>
+          <li>RGB Mew 的爆率没有可靠样本（3,000 包里不足以统计），这里是<b>假设值</b>，可在上方调整，观察它对期望价值的影响。</li>
+          <li>同一稀有度内假设每张卡等概率；Common/Uncommon 在数据源中未区分，统一按 Common 处理。</li>
+          <li>卡包结构参考 <a href="https://www.digitaltq.com/pokemon-tcg-30th-celebration-pull-rates" target="_blank" rel="noopener">DigitalTQ</a> 与 <a href="https://billsarchive.com/30th-celebration.html" target="_blank" rel="noopener">Bill's Archive</a>（能量卡与兑换码卡未模拟）。</li>
+        </ul>
+        <p class="note">本页面仅用于概率、统计与经济学教学演示，非商业用途，与 The Pokémon Company / Nintendo / Creatures / GAME FREAK 无任何关联。Pokémon 及相关卡牌图像版权归其权利人所有。模拟中的“价值”不构成任何投资建议。</p>
+        <button class="btn danger sm" id="btnReset">清空全部数据（收藏与统计）</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-bg" data-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <button class="icon-btn close" data-close aria-label="关闭">✕</button>
+    <div class="modal-card" id="mCard"></div>
+    <div class="modal-info" id="mInfo"></div>
+  </div>
+</div>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="flash" aria-hidden="true"></div>
+<div id="tip" role="tooltip" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="data/cards.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
