@@ -26,9 +26,9 @@ const BASE_RATE = { FR: 0.0083, SIR: 0.0488, IR: 0.1972, CC: 0.1015, DR: 0.2102 
 
 /* ---------- state ---------- */
 const KEY = 'pokepack30.v1';
-const fresh = () => ({ coll: {}, packs: 0, spent: 0, value: 0, pulled: {}, best: null, sound: true, price: 4.99, rgbN: 3000 });
+const fresh = () => ({ coll: {}, packs: 0, spent: 0, value: 0, pulled: {}, best: null, sound: true, price: 15, rgbN: 3000, pv: 2 });
 let S = fresh();
-try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+try { const o = JSON.parse(localStorage.getItem(KEY) || '{}'); if (o.pv !== 2) { o.price = 15; o.pv = 2; o.spent = (o.packs || 0) * 15; } Object.assign(S, o); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 const rates = () => ({ ...BASE_RATE, RGB: 1 / S.rgbN });
@@ -510,7 +510,7 @@ function renderStats() {
 }
 $('#setPrice').onchange = e => { S.price = +e.target.value; save(); renderWallet(); renderStats(); };
 $('#setRgb').onchange = e => { S.rgbN = +e.target.value; save(); prepare(); renderStats(); };
-$('#btnReset').onclick = () => { if (!confirm('确定清空全部收藏与统计数据吗？此操作无法撤销。')) return; const keep = { sound: S.sound, price: S.price, rgbN: S.rgbN }; S = Object.assign(fresh(), keep); save(); renderWallet(); renderStats(); toast('已清空'); };
+$('#btnReset').onclick = () => { if (!confirm('确定清空全部收藏与统计数据吗？此操作无法撤销。')) return; const keep = { sound: S.sound, price: S.price, rgbN: S.rgbN, pv: 2 }; S = Object.assign(fresh(), keep); save(); renderWallet(); renderStats(); toast('已清空'); };
 
 /* Monte Carlo */
 const BINS = [0, 1, 1.5, 2, 3, 5, 10, 25, 50, 100, 1000, Infinity];
