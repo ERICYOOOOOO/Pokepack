@@ -117,7 +117,7 @@ const sfx = (() => {
 /* ---------- particles ---------- */
 const fx = (() => {
   const cv = $('#fx'), g = cv.getContext('2d'); let P = [], run = false, dpr = 1;
-  const size = () => { dpr = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; };
+  const size = () => { dpr = Math.min(1.5, devicePixelRatio || 1); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; };
   addEventListener('resize', size); size();
   function loop() {
     g.clearRect(0, 0, cv.width, cv.height);
@@ -126,13 +126,13 @@ const fx = (() => {
       p.vy += p.g; p.vx *= p.dr; p.vy *= p.dr; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
       const a = Math.min(1, p.life / 25);
       g.save(); g.globalAlpha = a; g.translate(p.x * dpr, p.y * dpr); g.rotate(p.rot); g.fillStyle = p.c;
-      if (p.kind === 'spark') { g.globalCompositeOperation = 'lighter'; g.shadowBlur = 12 * dpr; g.shadowColor = p.c; const s = p.s * dpr * a; g.beginPath(); g.moveTo(0, -s); g.lineTo(s * .28, -s * .28); g.lineTo(s, 0); g.lineTo(s * .28, s * .28); g.lineTo(0, s); g.lineTo(-s * .28, s * .28); g.lineTo(-s, 0); g.lineTo(-s * .28, -s * .28); g.fill(); }
+      if (p.kind === 'spark') { const s = p.s * dpr * a; g.beginPath(); g.moveTo(0, -s); g.lineTo(s * .28, -s * .28); g.lineTo(s, 0); g.lineTo(s * .28, s * .28); g.lineTo(0, s); g.lineTo(-s * .28, s * .28); g.lineTo(-s, 0); g.lineTo(-s * .28, -s * .28); g.fill(); }
       else g.fillRect(-p.s * dpr / 2, -p.s * dpr * .3, p.s * dpr, p.s * dpr * .6);
       g.restore();
     }
     if (P.length) requestAnimationFrame(loop); else { run = false; g.clearRect(0, 0, cv.width, cv.height); }
   }
-  const kick = () => { if (!run) { run = true; requestAnimationFrame(loop); } };
+  const kick = () => { if (P.length > 320) P = P.slice(-320); if (!run) { run = true; requestAnimationFrame(loop); } };
   return {
     burst(x, y, colors, n, power = 9) {
       for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = power * (0.3 + Math.random()); P.push({ kind: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.05, dr: 0.955, s: 3 + Math.random() * 7, c: pick(colors), life: 40 + Math.random() * 50, rot: Math.random() * 3, vr: 0.1 }); }
@@ -315,10 +315,10 @@ async function flip() {
   const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
   const cols = k === 'RGB' ? ['#ff1744', '#00e676', '#2979ff', '#fff'] : [color, '#fff', '#ffe9a8'];
   stage.dataset.tier = tier; sfx.chime(tier);
-  if (tier >= 1) fx.burst(cx, cy, cols, [0, 10, 26, 48, 90, 130, 200][tier], 6 + tier * 2.2);
+  if (tier >= 1) fx.burst(cx, cy, cols, [0, 8, 18, 32, 60, 90, 130][tier], 6 + tier * 2.2);
   if (tier >= 3) flash(color);
-  if (tier >= 4) { stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); fx.confetti(cols, tier >= 5 ? 220 : 120); }
-  if (tier >= 6) { await sleep(350); fx.burst(cx, cy, cols, 200, 20); fx.confetti(cols, 300); }
+  if (tier >= 4) { stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); fx.confetti(cols, tier >= 5 ? 140 : 90); }
+  if (tier >= 6) { await sleep(350); fx.burst(cx, cy, cols, 120, 20); fx.confetti(cols, 160); }
   pc.up = true;
   $('#info').innerHTML = `<div class="nm">${esc(pc.c.name)} <small>${numLabel(pc.c)}</small></div><div class="row">${badge(k)}<span class="val" id="infoVal">$0.00</span></div>`;
   countUp($('#infoVal'), pc.c.p, tier >= 3 ? 900 : 450);
